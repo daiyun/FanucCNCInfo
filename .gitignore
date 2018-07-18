@@ -1,0 +1,8 @@
+.idea/
+log/
+target/
+lib/
+*/test/
+*.iml
+*.dll
+*.h

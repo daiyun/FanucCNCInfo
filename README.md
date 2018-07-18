@@ -1,0 +1,1 @@
+## fanuc cnc infomation collect.
