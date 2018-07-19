@@ -3,6 +3,7 @@ log/
 target/
 lib/
 */test/
+data/
 *.iml
 *.dll
 *.h

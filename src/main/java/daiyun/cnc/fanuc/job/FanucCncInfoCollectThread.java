@@ -3,14 +3,10 @@ package daiyun.cnc.fanuc.job;
 import daiyun.cnc.fanuc.sdk.Fanuc;
 import daiyun.cnc.fanuc.sdk.FanucCncAPI;
 import daiyun.conf.SysConfig;
-import daiyun.utils.LocalFlieUtil;
-import daiyun.utils.TimeFormat;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.io.File;
 import java.lang.reflect.Field;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -18,16 +14,17 @@ import java.util.Set;
  * @author daiyun
  * @date 2018-07-05 17:27.
  */
-public class FanucCncInfoCollect {
+public class FanucCncInfoCollectThread extends Thread {
 
+  private CncInfoCache cncInfoCache;
   private FanucCncAPI fanucCncAPI;
 
-  public static void main(String[] args) {
-    FanucCncInfoCollect fanucAPITest = new FanucCncInfoCollect();
-    fanucAPITest.start();
+  public FanucCncInfoCollectThread(CncInfoCache cncInfoCache) {
+    this.cncInfoCache = cncInfoCache;
   }
 
-  public void start() {
+  @Override
+  public void run() {
     fanucCncAPI = new FanucCncAPI(SysConfig.conf.getString("addr"),
         SysConfig.conf.getInteger("port").shortValue(),
         SysConfig.conf.getLong("timeout"));
@@ -37,9 +34,10 @@ public class FanucCncInfoCollect {
 
       try {
         while (true) {
+          long s = System.currentTimeMillis();
           JSONObject jsonFile = new JSONObject();
 
-          long s = System.currentTimeMillis();
+          jsonFile.put("status", status());
 
           // 主轴位置信息
           jsonFile.put("position", position());
@@ -56,22 +54,19 @@ public class FanucCncInfoCollect {
           // 进给
           jsonFile.put("F", getF());
 
+          cncInfoCache.setCurrentCncInfo(jsonFile);
+
           // 计算休眠时间
 
           // 信息写入文件
           if (!SysConfig.conf.getBoolean("debug")) {
             long e = System.currentTimeMillis();
-            Date currentTime = new Date();
-            String collectTime = TimeFormat.dateFormat("yyyy-MM-dd-HH-mm", currentTime);
-            LocalFlieUtil.appendFile(SysConfig.conf.getString("dataDir") + File.separator + TimeFormat.dateFormat("yyyy-MM-dd", currentTime) + File.separator,
-                SysConfig.conf.getString("dataFilePre") + collectTime + ".txt",
-                jsonFile.toString());
 
             long sleepMillis = SysConfig.conf.getInteger("collectInterval") - (e - s);
+
             if (sleepMillis > 0) {
               Thread.sleep(sleepMillis);
             }
-
           } else {
             System.out.println(jsonFile);
             Thread.sleep(2000);
@@ -83,6 +78,31 @@ public class FanucCncInfoCollect {
         fanucCncAPI.cancle();
       }
     }
+  }
+
+  /**
+   * 获取机台状态信息
+   *
+   * @return
+   */
+  private int status() {
+    int status = -1;
+    Fanuc.ODBST odbst = fanucCncAPI.getCncStatus();
+    switch (odbst.run) {
+      case 1:
+        // "调试或装料中！";//机台已经关机或联机中断!
+        break;
+      case 2:
+        //"暂停！";
+        break;
+      case 3:
+        // 加工中
+        status = 3;
+        break;
+      default:
+        break;
+    }
+    return status;
   }
 
   public JSONObject position() {

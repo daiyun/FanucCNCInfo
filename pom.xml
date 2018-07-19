@@ -19,7 +19,7 @@
                     </descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass>daiyun.cnc.fanuc.job.FanucCncInfoCollect</mainClass>
+                            <mainClass>daiyun.cnc.fanuc.job.FanucCncInfoCollectThread</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
