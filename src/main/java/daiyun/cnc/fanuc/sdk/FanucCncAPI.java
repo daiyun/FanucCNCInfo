@@ -102,38 +102,57 @@ public class FanucCncAPI {
   }
 
 
+  /**
+   * 获取工具使用次数
+   * @return
+   */
   public int getToolMachinedPart() {
     int count = -1;
     Fanuc.ODBUSEGRP odbusegrp = new Fanuc.ODBUSEGRP();
-    Fanuc.ODBTG toolGroupInfo = new Fanuc.ODBTG();
     short ret = fanuc.cnc_rdtlusegrp(flibHndl[0], odbusegrp);
-    if (ret == Fanuc.EW_OK) {
-      if (odbusegrp.use != 0) {
-        ret = fanuc.cnc_rdtoolgrp(flibHndl[0], (short) odbusegrp.use, (short) (20 + 20 * 1), toolGroupInfo);
-        if (ret == Fanuc.EW_OK) {
-          System.out.println("正在运行的刀片组号;" + odbusegrp.use + "   寿命：" + toolGroupInfo.life + "  次数：" + toolGroupInfo.count);
-          count = toolGroupInfo.count;
-        }
-      }
+    if (ret != Fanuc.EW_OK || odbusegrp.use == 0) {
+      return -1;
     }
+
+    Fanuc.ODBTG toolGroupInfo = new Fanuc.ODBTG();
+    ret = fanuc.cnc_rdtoolgrp(flibHndl[0], (short) odbusegrp.use, (short) (20 + 20 * 1), toolGroupInfo);
+    if (ret == Fanuc.EW_OK) {
+      System.out.println("正在运行的刀片组号;" + odbusegrp.use + "   寿命：" + toolGroupInfo.life + "  次数：" + toolGroupInfo.count);
+      count = toolGroupInfo.count;
+    }
+
     return count;
   }
 
+  /**
+   * 获取工具使用信息，含寿命、使用次数、当前工具编号等信息
+   * @return
+   */
   public JSONObject getToolInfo() {
-    JSONObject json = new JSONObject();
-    int toolNum = -1;
+
     Fanuc.ODBUSEGRP toolGroup = new Fanuc.ODBUSEGRP();
-    Fanuc.ODBTG toolGroupInfo = new Fanuc.ODBTG();
     short ret = fanuc.cnc_rdtlusegrp(flibHndl[0], toolGroup);
-    ret = fanuc.cnc_rdtoolgrp(flibHndl[0], (short) toolGroup.use, (short) (20 + 20 * 4), toolGroupInfo);
-    if (ret == Fanuc.EW_OK) {
-      json.put("currentTool",toolGroupInfo.data.data1.tool_num);
-      json.put("life",toolGroupInfo.life);
-      json.put("count",toolGroupInfo.count);
+    if (ret != Fanuc.EW_OK || toolGroup.use == 0) {
+      return null;
     }
+
+    Fanuc.ODBTG toolGroupInfo = new Fanuc.ODBTG();
+    ret = fanuc.cnc_rdtoolgrp(flibHndl[0], (short) toolGroup.use, (short) (20 + 20 * 4), toolGroupInfo);
+    if (ret != Fanuc.EW_OK) {
+      return null;
+    }
+
+    JSONObject json = new JSONObject();
+    json.put("currentTool",toolGroupInfo.data.data1.tool_num);
+    json.put("life",toolGroupInfo.life);
+    json.put("count",toolGroupInfo.count);
     return json;
   }
 
+  /**
+   * 函数作用待探明
+   * @return
+   */
   public double getResistance() {
     return 0.0;
   }
@@ -141,6 +160,7 @@ public class FanucCncAPI {
 
   /**
    * 获取机台刀号
+   * TODO: 全是信息打印，作用需要明确
    */
   public void getTools() {
     Fanuc.ODBTLIFE5 tool = new Fanuc.ODBTLIFE5();//读取刀片组的序号
@@ -233,6 +253,7 @@ public class FanucCncAPI {
 
   /**
    * cnc status infomation
+   * 获取CNC 状态信息
    *
    * @return
    */
@@ -248,6 +269,7 @@ public class FanucCncAPI {
 
   /**
    * 获取加工工件数量
+   * TODO: 这个函数好像没有写完
    */
   public void getProcessTimes() {
     Fanuc.ODBPARANUM odbparanum = new Fanuc.ODBPARANUM();
