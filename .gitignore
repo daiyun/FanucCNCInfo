@@ -6,3 +6,6 @@ lib/
 *.iml
 *.dll
 *.h
+.classpath
+.project
+.settings/
