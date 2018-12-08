@@ -245,8 +245,7 @@ public class FanucCncInfoCollect {
     JSONObject json = new JSONObject();
     short point = info.dec;
     int data = info.data.intValue();
-    double position = 0.0f;
-    position = data * Math.pow(10, -point);
+    double position =  data * Math.pow(10, -point);
     json.put("data", position);
     json.put("unit", getUnitType(info.unit));
     return json;
