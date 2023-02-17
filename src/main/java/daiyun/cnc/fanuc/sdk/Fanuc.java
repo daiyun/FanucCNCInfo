@@ -28,7 +28,7 @@ public interface Fanuc extends Library {
   public enum focas_ret {
     EW_PROTOCOL(-17), // protocol error
     EW_SOCKET(-16), // Windows socket error
-    EW_NODLL(-1), // DLL not exist error
+    EW_NODLL(-15), // DLL not exist error
     EW_BUS(-11), // bus error
     EW_SYSTEM2(-10), // system error
     EW_HSSB(-9), // hssb communication error
